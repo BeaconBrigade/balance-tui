@@ -1,0 +1,13 @@
+[package]
+name = "balance-tui"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+bpaf = { version = "0.7.4", features = ["derive"] }
+chem-eq = "0.1.1"
+color-eyre = "0.6.2"
+crossterm = "0.25.0"
+tui = "0.19.0"
