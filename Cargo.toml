@@ -5,6 +5,10 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[[bin]]
+path = "src/main.rs"
+name = "cmbl"
+
 [dependencies]
 bpaf = { version = "0.7.4", features = ["derive"] }
 chem-eq = "0.1.1"
