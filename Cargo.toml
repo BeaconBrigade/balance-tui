@@ -10,6 +10,7 @@ path = "src/main.rs"
 name = "cmbl"
 
 [dependencies]
+arboard = { version = "3.2.0", default-features = false }
 bpaf = { version = "0.7.4", features = ["derive"] }
 chem-eq = "0.1.1"
 color-eyre = "0.6.2"
