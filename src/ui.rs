@@ -1,7 +1,7 @@
 use std::io;
 
 use arboard::Clipboard;
-use chem_eq::{balance::EquationBalancer, Equation};
+use chem_eq::{balance::EquationBalancer, Equation, error::{EquationError, BalanceError}};
 use crossterm::{
     event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyModifiers},
     execute,
@@ -21,7 +21,7 @@ use tui::{
 struct App {
     pub input_mode: InputMode,
     pub input: String,
-    pub output: Option<Result<Equation, chem_eq::Error>>,
+    pub output: Option<Result<Equation, Error>>,
 }
 
 impl App {
@@ -53,11 +53,12 @@ impl App {
             |r| {
                 let res = r
                     .as_ref()
-                    .map(Equation::equation)
-                    .map_err(ToString::to_string);
+                    .map(Equation::equation);
                 match res {
                     Ok(s) => s.to_string(),
-                    Err(s) => s,
+                    Err(Error::Eq(EquationError::ParsingError(_))) => "Couldn't parse equation".to_string(),
+                    Err(Error::Eq(EquationError::IncorrectEquation)) => "Equation was not valid".to_string(),
+                    Err(Error::Balance(e)) => e.to_string(),
                 }
             },
         );
@@ -78,12 +79,12 @@ impl App {
         }
         let res = Equation::new(self.input.as_str());
         let Ok(eq) = res else {
-            self.output = Some(res);
+            self.output = Some(res.map_err(Into::into));
             return;
         };
         let balancer = EquationBalancer::new(&eq);
-        let eq = balancer.balance();
-        self.output = Some(Ok(eq));
+        let eq = balancer.balance().map_err(Into::into);
+        self.output = Some(eq);
     }
 }
 
@@ -100,6 +101,34 @@ impl InputMode {
             Self::Normal => " i or e          to edit\n q or esc        to quit\n y               to copy balanced equation",
             Self::Editing => " esc or ctrl-[   leave editing mode\n",
         }
+    }
+}
+
+#[derive(Debug, Clone)]
+enum Error {
+    Eq(EquationError),
+    Balance(BalanceError),
+}
+
+impl ToString for Error {
+    fn to_string(&self) -> String {
+        match self {
+            Self::Eq(EquationError::ParsingError(_)) => "Equation could not be balanced".to_string(),
+            Self::Eq(EquationError::IncorrectEquation) => "Equation is not valid".to_string(),
+            Self::Balance(e) => e.to_string(),
+        }
+    }
+}
+
+impl From<EquationError> for Error {
+    fn from(e: EquationError) -> Self {
+        Self::Eq(e)
+    }
+}
+
+impl From<BalanceError> for Error {
+    fn from(e: BalanceError) -> Self {
+        Self::Balance(e)
     }
 }
 

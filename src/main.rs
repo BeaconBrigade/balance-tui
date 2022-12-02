@@ -9,7 +9,7 @@ fn main() -> color_eyre::Result<()> {
     let args = cli::chem_args().run();
 
     if let Some(eq) = args.equation.as_ref() {
-        println!("{}", EquationBalancer::from(eq).balance());
+        println!("{}", EquationBalancer::from(eq).balance()?);
         return Ok(());
     }
 
