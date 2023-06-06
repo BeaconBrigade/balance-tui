@@ -1,7 +1,11 @@
 use std::io;
 
 use arboard::Clipboard;
-use chem_eq::{balance::EquationBalancer, Equation, error::{EquationError, BalanceError}};
+use chem_eq::{
+    balance::EquationBalancer,
+    error::{BalanceError, EquationError},
+    Equation,
+};
 use crossterm::{
     event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyModifiers},
     execute,
@@ -51,13 +55,18 @@ impl App {
         let text = self.output.as_ref().map_or_else(
             || "Waiting for equation...".to_string(),
             |r| {
-                let res = r
-                    .as_ref()
-                    .map(Equation::equation);
+                let res = r.as_ref().map(Equation::equation);
                 match res {
                     Ok(s) => s.to_string(),
-                    Err(Error::Eq(EquationError::ParsingError(_))) => "Couldn't parse equation".to_string(),
-                    Err(Error::Eq(EquationError::IncorrectEquation)) => "Equation was not valid".to_string(),
+                    Err(Error::Eq(EquationError::ParsingError(_))) => {
+                        "Couldn't parse equation".to_string()
+                    }
+                    Err(Error::Eq(EquationError::IncorrectEquation)) => {
+                        "Equation was not valid".to_string()
+                    }
+                    Err(Error::Eq(EquationError::TooMuchInput(s))) => {
+                        format!("Too much input: {s}")
+                    }
                     Err(Error::Balance(e)) => e.to_string(),
                 }
             },
@@ -113,8 +122,11 @@ enum Error {
 impl ToString for Error {
     fn to_string(&self) -> String {
         match self {
-            Self::Eq(EquationError::ParsingError(_)) => "Equation could not be balanced".to_string(),
+            Self::Eq(EquationError::ParsingError(_)) => {
+                "Equation could not be balanced".to_string()
+            }
             Self::Eq(EquationError::IncorrectEquation) => "Equation is not valid".to_string(),
+            Self::Eq(EquationError::TooMuchInput(s)) => format!("Too much input: {s}"),
             Self::Balance(e) => e.to_string(),
         }
     }
